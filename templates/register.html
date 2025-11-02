@@ -111,7 +111,7 @@
 
   <div class="register-container">
     <div class="login-header">
-      <h3><i class="material-icons align-middle text-primary">how_to_vote</i> Voting System</h3>
+      <h3> Voting System</h3>
       <p class="text-muted mt-1 mb-0">Register to get started</p>
     </div>
 
@@ -122,7 +122,7 @@
         {% for category, message in messages %}
           <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
             {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button title="n" type="button" class="btn-close" data-bs-dismiss="alert"></button>
           </div>
         {% endfor %}
       {% endif %}
@@ -131,12 +131,12 @@
     <form action="{{ url_for('auth.register') }}" method="POST" id="registerForm" onsubmit="return validateForm()">
       <div class="mb-3">
         <label class="form-label">Username</label>
-        <input type="text" name="username" class="form-control" required>
+        <input title="v" type="text" name="username" class="form-control" required>
       </div>
 
       <div class="mb-3">
         <label class="form-label">Email</label>
-        <input type="email" name="email" class="form-control" required>
+        <input title="v" type="email" name="email" class="form-control" required>
       </div>
 
       <div class="mb-3">
@@ -150,13 +150,13 @@
 
       <div class="mb-3">
         <label class="form-label">Password</label>
-        <input type="password" name="password" class="form-control" id="password" required minlength="8">
+        <input title="v" type="password" name="password" class="form-control" id="password" required minlength="8">
         <div class="form-text text-muted">Must be at least 8 characters long.</div>
       </div>
 
       <div class="mb-3">
         <label class="form-label">Confirm Password</label>
-        <input type="password" name="confirm_password" class="form-control" id="confirm_password" required minlength="8">
+        <input title="v" type="password" name="confirm_password" class="form-control" id="confirm_password" required minlength="8">
       </div>
 
       <button type="submit" class="btn btn-primary">Register</button>
