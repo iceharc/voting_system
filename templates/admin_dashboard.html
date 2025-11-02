@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard | Voting System</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <!-- Google Font: Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #f4f7ff, #e6efff);
+      font-family: 'Poppins', sans-serif;
+      color: #333;
+      min-height: 100vh;
+    }
+
+    h2 {
+      font-weight: 600;
+      color: #0d6efd;
+    }
+
+    .dashboard-container {
+      max-width: 1200px;
+      margin: 40px auto;
+    }
+
+    .card {
+      border: none;
+      border-radius: 15px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+      background: #fff;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 22px rgba(13, 110, 253, 0.1);
+    }
+
+    .card-header {
+      cursor: pointer;
+      background: linear-gradient(135deg, #0d6efd, #4a8efc);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      font-weight: 500;
+      font-size: 1.05rem;
+    }
+
+    .card-body {
+      background-color: #ffffff;
+      padding: 1.5rem;
+    }
+
+    .form-label {
+      font-weight: 500;
+      color: #333;
+    }
+
+    .form-control, .form-select {
+      border-radius: 10px;
+      border: 1px solid #ced4da;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    }
+
+    .btn {
+      border-radius: 10px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0d6efd, #4a8efc);
+      border: none;
+      box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0056d2, #0d6efd);
+      transform: scale(1.02);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #198754, #20c997);
+      border: none;
+      box-shadow: 0 4px 10px rgba(25,135,84,0.2);
+    }
+
+    .btn-success:hover {
+      background: linear-gradient(135deg, #157347, #198754);
+      transform: scale(1.02);
+    }
+
+    .poll-timer {
+      font-weight: 600;
+      color: #0d6efd;
+    }
+
+    .badge {
+      font-size: 0.85rem;
+      border-radius: 8px;
+      padding: 6px 10px;
+    }
+
+    .table th {
+      background-color: #f8f9fa;
+      color: #495057;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .modal-content {
+      border-radius: 15px;
+      overflow: hidden;
+    }
+
+    .modal-header.bg-danger {
+      background: linear-gradient(135deg, #dc3545, #ff5b6b);
+    }
+
+    .text-muted {
+      font-size: 0.95rem;
+    }
+
+    .alert {
+      border-radius: 10px;
+    }
+
+    .poll-row:hover {
+      background-color: #eef5ff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container dashboard-container">
+    <h2 class="text-center mb-4">🗳️ Admin Dashboard</h2>
+
+    <!-- 🔔 Alert Box -->
+    <div id="alertBox" class="alert d-none" role="alert"></div>
+
+    <!-- 🗳️ Create Poll -->
+    <div class="card mb-4">
+      <div class="card-header" data-bs-toggle="collapse" data-bs-target="#createPollForm">
+        <span>Create New Poll</span> <i class="bi bi-chevron-down"></i>
+      </div>
+      <div id="createPollForm" class="collapse">
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('admin.add_poll_with_candidates') }}">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Poll Title</label>
+                <input type="text" name="title" class="form-control" placeholder="Poll Title" required />
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Start Time</label>
+                <input type="datetime-local" name="start_time" class="form-control" required />
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">End Time</label>
+                <input type="datetime-local" name="end_time" class="form-control" required />
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label">How many candidates?</label>
+              <input type="number" id="candidate_count" class="form-control" min="1" max="20" placeholder="e.g., 5" />
+            </div>
+
+            <div id="candidateInputs" class="mt-3"></div>
+
+            <button type="submit" class="btn btn-success mt-3 w-100">Create Poll with Candidates</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 👥 Add Candidate -->
+   <!-- 👥 User Management -->
+<div class="card mb-4">
+  <div class="card-header" data-bs-toggle="collapse" data-bs-target="#userManagement">
+    <span>User Management</span> <i class="bi bi-chevron-down"></i>
+  </div>
+  <div id="userManagement" class="collapse">
+    <div class="card-body">
+      {% if users %}
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr id="user-{{ user.id }}">
+            <td>{{ user.username }}</td>
+            <td>{{ user.role }}</td>
+            <td>
+              <button class="btn btn-primary btn-sm me-2"
+                      onclick="openUpdateModal({{ user.id }}, '{{ user.username }}', '{{ user.role }}')">
+                <i class="bi bi-pencil-fill"></i> Update
+              </button>
+              <button class="btn btn-danger btn-sm"
+                      onclick="confirmDeleteUser({{ user.id }}, '{{ user.username }}')">
+                <i class="bi bi-trash-fill"></i> Delete
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="text-muted">No users found.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+
+    <!-- 📋 Current Polls -->
+    <div class="card mb-4">
+      <div class="card-header" data-bs-toggle="collapse" data-bs-target="#currentPolls">
+        <span>Current Polls</span> <i class="bi bi-chevron-down"></i>
+      </div>
+      <div id="currentPolls" class="collapse show">
+        <div class="card-body">
+          {% if polls %}
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Time Left</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for poll in polls %}
+              <tr id="poll-{{ poll.id }}" class="poll-row" data-poll-id="{{ poll.id }}" data-poll-title="{{ poll.title }}">
+                <td>{{ poll.title }}</td>
+                <td><span class="poll-timer" data-end="{{ poll.end_time.isoformat() }}"></span></td>
+                <td>
+                  {% if poll.is_active %}
+                  <span class="badge bg-success">Active</span>
+                  {% else %}
+                  <span class="badge bg-secondary">Closed</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="text-muted">No polls created yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- 📈 View Results -->
+    <div class="text-center mt-4">
+        <a href="{{ url_for('admin.results') }}" class="btn-custom">
+          <i class="bi bi-bar-chart-fill"></i> View Results
+        </a>
+      </div>
+      
+  </div>
+
+  <!-- Delete Modal -->
+  <div class="modal fade" id="deletePollModal" tabindex="-1" aria-labelledby="deletePollModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title" id="deletePollModalLabel">Delete Poll</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p id="deletePollMessage">Are you sure you want to delete this poll?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📝 Update User Modal -->
+<div class="modal fade" id="updateUserModal" tabindex="-1" aria-labelledby="updateUserLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="updateUserLabel">Update User</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="updateUserForm" method="POST">
+        <div class="modal-body">
+          <input type="hidden" id="updateUserId" name="user_id">
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" id="updateUsername" name="username" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Role</label>
+            <select id="updateRole" name="role" class="form-select" required>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">New Password (optional)</label>
+            <input type="password" id="updatePassword" name="password" class="form-control">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 🗑️ Delete User Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteUserModalLabel">Delete User</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p id="deleteUserMessage">Are you sure you want to delete this user?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteUserBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <!-- JS scripts remain unchanged -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const countInput = document.getElementById("candidate_count");
+    const candidateInputs = document.getElementById("candidateInputs");
+
+  countInput.addEventListener("input", () => {
+    const count = parseInt(countInput.value);
+    candidateInputs.innerHTML = "";
+
+    if (isNaN(count) || count <= 0) return;
+
+    for (let i = 1; i <= count; i++) {
+      const div = document.createElement("div");
+      div.classList.add("mb-2");
+      div.innerHTML = `
+        <label class="form-label">Candidate ${i}</label>
+        <input type="text" name="candidate_${i}" class="form-control" placeholder="Enter candidate name" required>
+      `;
+      candidateInputs.appendChild(div);
+    }
+  });
+    // Countdown Timer
+    function updateCountdowns() {
+      const timers = document.querySelectorAll(".poll-timer");
+      timers.forEach(timer => {
+        const endTime = new Date(timer.dataset.end);
+        const now = new Date();
+        const diff = endTime - now;
+
+        if (diff <= 0) {
+          timer.textContent = "Expired";
+          timer.classList.add("text-danger");
+          return;
+        }
+
+        const hrs = Math.floor(diff / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((diff % (1000 * 60)) / 1000);
+        timer.textContent = `${hrs}h ${mins}m ${secs}s`;
+      });
+    }
+    setInterval(updateCountdowns, 1000);
+
+    // Delete Poll
+    async function deletePoll(pollId) {
+  if (!confirm("Delete this poll?")) return;
+
+  try {
+    const response = await fetch(`/admin/delete_poll/${pollId}`, {
+      method: "DELETE",
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      document.getElementById(`poll-${pollId}`).remove();
+      showAlert("Poll deleted successfully!", "success");
+    } else {
+      showAlert(data.error || "Failed to delete poll.", "danger");
+    }
+  } catch (error) {
+    console.error("Error deleting poll:", error);
+    showAlert("An error occurred while deleting the poll.", "danger");
+  }
+}
+
+
+    // Live Results Loader
+    async function loadResults() {
+      const pollSelect = document.getElementById("pollSelect");
+      const pollId = pollSelect ? pollSelect.value || 1 : 1;
+      const resultsDiv = document.getElementById("resultsTable");
+      try {
+        const response = await fetch(`/admin/poll_stats/${pollId}`);
+        const data = await response.json();
+        if (!data.stats || !data.stats.length) {
+          resultsDiv.innerHTML = "<p class='text-muted'>No votes yet.</p>";
+          return;
+        }
+        let html = "<table class='table table-bordered'><thead><tr><th>Candidate</th><th>Votes</th></tr></thead><tbody>";
+        data.stats.forEach(([name, votes]) => {
+          html += `<tr><td>${name}</td><td>${votes}</td></tr>`;
+        });
+        html += "</tbody></table>";
+        resultsDiv.innerHTML = html;
+      } catch (error) {
+        console.error("Error loading results:", error);
+      }
+    }
+    setInterval(loadResults, 5000);
+
+    // Show alert
+    function showAlert(message, type = "success") {
+      const alertBox = document.getElementById("alertBox");
+      alertBox.textContent = message;
+      alertBox.className = `alert alert-${type}`;
+      alertBox.classList.remove("d-none");
+      setTimeout(() => alertBox.classList.add("d-none"), 4000);
+    }
+    // Start or Stop Poll
+async function togglePoll(pollId, activate) {
+  const action = activate ? "start" : "stop";
+  try {
+    const response = await fetch(`/${action}_poll/${pollId}`, { method: "POST" });
+    const data = await response.json();
+    if (response.ok) {
+      showAlert(`Poll ${activate ? "activated" : "deactivated"} successfully!`, "success");
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showAlert(data.error || "Failed to update poll.", "danger");
+    }
+  } catch (error) {
+    console.error("Error toggling poll:", error);
+    showAlert("An error occurred while updating the poll.", "danger");
+  }
+}
+let selectedPollId = null;
+
+  // When a poll row is clicked, open delete modal
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".poll-row").forEach(row => {
+      row.addEventListener("click", () => {
+        selectedPollId = row.dataset.pollId;
+        const title = row.dataset.pollTitle;
+        document.getElementById("deletePollMessage").textContent =
+          `Are you sure you want to delete the poll titled "${title}"?`;
+        const modal = new bootstrap.Modal(document.getElementById("deletePollModal"));
+        modal.show();
+      });
+    });
+  });
+
+  // Confirm Delete
+  document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
+    if (!selectedPollId) return;
+    try {
+      const response = await fetch(`/admin/delete_poll/${selectedPollId}`, { method: "DELETE" });
+      const data = await response.json();
+      if (response.ok) {
+        document.getElementById(`poll-${selectedPollId}`).remove();
+        showAlert("Poll deleted successfully!", "success");
+      } else {
+        showAlert(data.error || "Failed to delete poll.", "danger");
+      }
+    } catch (error) {
+      console.error("Error deleting poll:", error);
+      showAlert("An error occurred while deleting the poll.", "danger");
+    }
+    // Close modal after action
+    const modalEl = document.getElementById("deletePollModal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal.hide();
+  });
+  // Open update modal
+function openUpdateModal(id, username, role) {
+  document.getElementById('updateUserId').value = id;
+  document.getElementById('updateUsername').value = username;
+  document.getElementById('updateRole').value = role;
+  document.getElementById('updatePassword').value = '';
+  new bootstrap.Modal(document.getElementById('updateUserModal')).show();
+}
+
+// Submit update user
+document.getElementById('updateUserForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const id = document.getElementById('updateUserId').value;
+  const username = document.getElementById('updateUsername').value;
+  const role = document.getElementById('updateRole').value;
+  const password = document.getElementById('updatePassword').value;
+
+  const response = await fetch(`/admin/update_user/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, role, password })
+  });
+
+  const data = await response.json();
+  if (response.ok) {
+    showAlert('User updated successfully!', 'success');
+    setTimeout(() => location.reload(), 1000);
+  } else {
+    showAlert(data.error || 'Failed to update user.', 'danger');
+  }
+  bootstrap.Modal.getInstance(document.getElementById('updateUserModal')).hide();
+});
+
+// Confirm delete modal
+let deleteUserId = null;
+function confirmDeleteUser(id, username) {
+  deleteUserId = id;
+  document.getElementById('deleteUserMessage').textContent = `Delete user "${username}"?`;
+  new bootstrap.Modal(document.getElementById('deleteUserModal')).show();
+}
+
+// Confirm delete action
+document.getElementById('confirmDeleteUserBtn').addEventListener('click', async () => {
+  if (!deleteUserId) return;
+  const response = await fetch(`/admin/delete_user/${deleteUserId}`, { method: 'DELETE' });
+  const data = await response.json();
+  if (response.ok) {
+    document.getElementById(`user-${deleteUserId}`).remove();
+    showAlert('User deleted successfully!', 'success');
+  } else {
+    showAlert(data.error || 'Failed to delete user.', 'danger');
+  }
+  bootstrap.Modal.getInstance(document.getElementById('deleteUserModal')).hide();
+});
+
+  </script>
+</body>
+</html>

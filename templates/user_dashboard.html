@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>User Dashboard | Voting System</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: #f9fafb;
+      font-family: 'Poppins', sans-serif;
+      color: #222;
+    }
+
+    h3, h4 {
+      font-weight: 600;
+    }
+
+    /* Active Poll Cards */
+    .poll-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
+      transition: all 0.3s ease;
+      overflow: hidden;
+      margin-bottom: 25px;
+      border: none;
+    }
+
+    .poll-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    }
+
+    .poll-header {
+      background: linear-gradient(135deg, #0d6efd, #4a8efc);
+      color: #fff;
+      padding: 15px 20px;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+    }
+
+    .poll-body {
+      padding: 20px;
+    }
+
+    .form-check-input:checked {
+      background-color: #0d6efd;
+      border-color: #0d6efd;
+    }
+
+    .btn-vote {
+      background: #0d6efd;
+      color: #fff;
+      border-radius: 10px;
+      font-weight: 500;
+      width: 100%;
+      transition: all 0.3s ease;
+    }
+
+    .btn-vote:hover {
+      background: #0b5ed7;
+      transform: scale(1.02);
+    }
+
+    /* Results (Closed Polls) */
+    .result-card {
+      border-radius: 14px;
+      border: none;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      background: #fff;
+      transition: all 0.3s ease;
+    }
+
+    .result-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .result-header {
+      background: #f0f4f8;
+      padding: 12px 18px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .result-body {
+      padding: 18px;
+    }
+
+    .winner {
+      font-weight: 600;
+      color: #198754; /* Bootstrap green */
+    }
+
+    .no-votes {
+      color: #6c757d;
+      font-style: italic;
+    }
+
+    .logout-btn {
+      font-weight: 500;
+      border-radius: 8px;
+    }
+
+    hr {
+      margin-top: 50px;
+      border-color: #ddd;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h3>Welcome, {{ current_user.username }}</h3>
+      <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm logout-btn">Logout</a>
+    </div>
+
+    {% if active_polls %}
+      <div class="row">
+        {% for poll in active_polls %}
+          <div class="col-md-6">
+            <div class="poll-card">
+              <div class="poll-header">
+                <h5 class="mb-1">{{ poll.title }}</h5>
+                <small>{{ poll.start_time.strftime('%Y-%m-%d %H:%M') }} → {{ poll.end_time.strftime('%Y-%m-%d %H:%M') }}</small>
+              </div>
+              <div class="poll-body">
+                {% if poll.candidates %}
+                  <form method="POST" action="{{ url_for('user.user_vote') }}">
+                    {% for candidate in poll.candidates %}
+                      <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio"
+                               name="candidate_id"
+                               id="candidate{{ candidate.id }}"
+                               value="{{ candidate.id }}"
+                               {% if user_votes.get(poll.id) == candidate.id %}checked{% endif %}
+                               {% if poll.id in user_voted_poll_ids %}disabled{% endif %}>
+                        <label class="form-check-label" for="candidate{{ candidate.id }}">
+                          {{ candidate.name }}
+                        </label>
+                      </div>
+                    {% endfor %}
+                    <input type="hidden" name="poll_id" value="{{ poll.id }}">
+                    {% if poll.id in user_voted_poll_ids %}
+                      <button type="button" class="btn btn-success btn-vote mt-2" disabled>Voted</button>
+                    {% else %}
+                      <button type="submit" class="btn btn-vote mt-2">Vote</button>
+                    {% endif %}
+                  </form>
+                {% else %}
+                  <p class="text-muted text-center">No candidates added yet.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-center text-muted">No active polls available right now.</p>
+    {% endif %}
+  </div>
+
+  <hr>
+
+  <h4 class="text-center mt-5 mb-3">🏁 Closed Polls & Results</h4>
+
+  {% if expired_with_winners %}
+    <div class="row">
+      {% for item in expired_with_winners %}
+        <div class="col-md-6 mb-4">
+          <div class="result-card">
+            <div class="result-header">
+              {{ item.poll.title }}
+            </div>
+            <div class="result-body">
+              {% if item.winner %}
+                <h6>Winner:</h6>
+                <p class="winner">{{ item.winner.name }}</p>
+                <small class="text-muted">Votes: {{ item.winner.votes }}</small>
+              {% else %}
+                <p class="no-votes">No votes were cast in this poll.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-center text-muted">No closed polls yet.</p>
+  {% endif %}
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

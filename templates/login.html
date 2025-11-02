@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login | Voting System</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Google Font: Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <style>
+    /* ===== Base ===== */
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f6f9fc, #eaf3ff);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+    }
+
+    /* ===== Login Card ===== */
+    .login-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+      max-width: 400px;
+      width: 100%;
+      padding: 40px 35px;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(20px);
+    }
+
+    .login-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    /* ===== Header ===== */
+    .login-header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .login-header h3 {
+      font-weight: 600;
+      color: #0d6efd;
+      letter-spacing: 0.3px;
+    }
+
+    .login-header p {
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+
+    /* ===== Form ===== */
+    .form-control {
+      padding-left: 40px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      border: 1px solid #ced4da;
+      transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 0.2rem rgba(13,110,253,.15);
+    }
+
+    .input-group {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #0d6efd;
+    }
+
+    /* ===== Button ===== */
+    .btn-primary {
+      width: 100%;
+      border-radius: 12px;
+      font-weight: 500;
+      padding: 10px;
+      letter-spacing: 0.3px;
+      background: linear-gradient(135deg, #0d6efd, #4a8efc);
+      border: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(13,110,253,0.2);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0056d2, #0d6efd);
+      transform: scale(1.02);
+      box-shadow: 0 8px 18px rgba(13,110,253,0.25);
+    }
+
+    /* ===== Footer Link ===== */
+    .text-muted {
+      font-size: 0.9rem;
+    }
+
+    .text-muted a {
+      text-decoration: none;
+      color: #0d6efd;
+      font-weight: 500;
+    }
+
+    .text-muted a:hover {
+      text-decoration: underline;
+    }
+
+    /* ===== Alert ===== */
+    .alert {
+      border-radius: 10px;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-card">
+    <div class="login-header">
+      <h3><i class="material-icons align-middle text-primary">how_to_vote</i> Voting System</h3>
+      <p class="text-muted mt-1 mb-0">Login to continue</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button title="bu"    type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('auth.login') }}">
+      <div class="mb-3 input-group">
+        <i class="material-icons input-icon">person</i>
+        <input type="text" id="username" name="username" class="form-control" placeholder="Username" required>
+      </div>
+
+      <div class="mb-3 input-group">
+        <i class="material-icons input-icon">lock</i>
+        <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary">
+        <i class="material-icons align-middle">login</i> Login
+      </button>
+    </form>
+
+    <div class="text-center mt-3 text-muted">
+      Don't have an account? <a href="{{ url_for('auth.register') }}">Register here</a>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

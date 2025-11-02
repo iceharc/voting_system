@@ -1,0 +1,153 @@
+<script>
+    const countInput = document.getElementById("candidate_count");
+  const candidateInputs = document.getElementById("candidateInputs");
+
+  countInput.addEventListener("input", () => {
+    const count = parseInt(countInput.value);
+    candidateInputs.innerHTML = "";
+
+    if (isNaN(count) || count <= 0) return;
+
+    for (let i = 1; i <= count; i++) {
+      const div = document.createElement("div");
+      div.classList.add("mb-2");
+      div.innerHTML = `
+        <label class="form-label">Candidate ${i}</label>
+        <input type="text" name="candidate_${i}" class="form-control" placeholder="Enter candidate name" required>
+      `;
+      candidateInputs.appendChild(div);
+    }
+  });
+    // Countdown Timer
+    function updateCountdowns() {
+      const timers = document.querySelectorAll(".poll-timer");
+      timers.forEach(timer => {
+        const endTime = new Date(timer.dataset.end);
+        const now = new Date();
+        const diff = endTime - now;
+
+        if (diff <= 0) {
+          timer.textContent = "Expired";
+          timer.classList.add("text-danger");
+          return;
+        }
+
+        const hrs = Math.floor(diff / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((diff % (1000 * 60)) / 1000);
+        timer.textContent = `${hrs}h ${mins}m ${secs}s`;
+      });
+    }
+    setInterval(updateCountdowns, 1000);
+
+    // Delete Poll
+    async function deletePoll(pollId) {
+  if (!confirm("Delete this poll?")) return;
+
+  try {
+    const response = await fetch(`/admin/delete_poll/${pollId}`, {
+      method: "DELETE",
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      document.getElementById(`poll-${pollId}`).remove();
+      showAlert("Poll deleted successfully!", "success");
+    } else {
+      showAlert(data.error || "Failed to delete poll.", "danger");
+    }
+  } catch (error) {
+    console.error("Error deleting poll:", error);
+    showAlert("An error occurred while deleting the poll.", "danger");
+  }
+}
+
+
+    // Live Results Loader
+    async function loadResults() {
+      const pollSelect = document.getElementById("pollSelect");
+      const pollId = pollSelect ? pollSelect.value || 1 : 1;
+      const resultsDiv = document.getElementById("resultsTable");
+      try {
+        const response = await fetch(`/admin/poll_stats/${pollId}`);
+        const data = await response.json();
+        if (!data.stats || !data.stats.length) {
+          resultsDiv.innerHTML = "<p class='text-muted'>No votes yet.</p>";
+          return;
+        }
+        let html = "<table class='table table-bordered'><thead><tr><th>Candidate</th><th>Votes</th></tr></thead><tbody>";
+        data.stats.forEach(([name, votes]) => {
+          html += `<tr><td>${name}</td><td>${votes}</td></tr>`;
+        });
+        html += "</tbody></table>";
+        resultsDiv.innerHTML = html;
+      } catch (error) {
+        console.error("Error loading results:", error);
+      }
+    }
+    setInterval(loadResults, 5000);
+
+    // Show alert
+    function showAlert(message, type = "success") {
+      const alertBox = document.getElementById("alertBox");
+      alertBox.textContent = message;
+      alertBox.className = `alert alert-${type}`;
+      alertBox.classList.remove("d-none");
+      setTimeout(() => alertBox.classList.add("d-none"), 4000);
+    }
+    // Start or Stop Poll
+async function togglePoll(pollId, activate) {
+  const action = activate ? "start" : "stop";
+  try {
+    const response = await fetch(`/${action}_poll/${pollId}`, { method: "POST" });
+    const data = await response.json();
+    if (response.ok) {
+      showAlert(`Poll ${activate ? "activated" : "deactivated"} successfully!`, "success");
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showAlert(data.error || "Failed to update poll.", "danger");
+    }
+  } catch (error) {
+    console.error("Error toggling poll:", error);
+    showAlert("An error occurred while updating the poll.", "danger");
+  }
+}
+let selectedPollId = null;
+
+  // When a poll row is clicked, open delete modal
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".poll-row").forEach(row => {
+      row.addEventListener("click", () => {
+        selectedPollId = row.dataset.pollId;
+        const title = row.dataset.pollTitle;
+        document.getElementById("deletePollMessage").textContent =
+          `Are you sure you want to delete the poll titled "${title}"?`;
+        const modal = new bootstrap.Modal(document.getElementById("deletePollModal"));
+        modal.show();
+      });
+    });
+  });
+
+  // Confirm Delete
+  document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
+    if (!selectedPollId) return;
+    try {
+      const response = await fetch(`/admin/delete_poll/${selectedPollId}`, { method: "DELETE" });
+      const data = await response.json();
+      if (response.ok) {
+        document.getElementById(`poll-${selectedPollId}`).remove();
+        showAlert("Poll deleted successfully!", "success");
+      } else {
+        showAlert(data.error || "Failed to delete poll.", "danger");
+      }
+    } catch (error) {
+      console.error("Error deleting poll:", error);
+      showAlert("An error occurred while deleting the poll.", "danger");
+    }
+    // Close modal after action
+    const modalEl = document.getElementById("deletePollModal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal.hide();
+  });
+  </script>

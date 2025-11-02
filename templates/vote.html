@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vote | Voting System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-4">
+  <h3 class="text-center mb-3">Vote for Your Candidate</h3>
+
+  <form method="POST" class="card p-4 shadow-sm">
+    {% for candidate in candidates %}
+    <div class="form-check mb-2">
+      <input type="radio" name="candidate_id" value="{{ candidate.id }}" id="c{{ candidate.id }}" class="form-check-input" required>
+      <label class="form-check-label" for="c{{ candidate.id }}">{{ candidate.name }}</label>
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-success w-100 mt-3">Submit Vote</button>
+  </form>
+
+  <div class="mt-4 text-center">
+    <a href="{{ url_for('user.user_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+  </div>
+</div>
+</body>
+</html>
